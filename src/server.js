@@ -2,9 +2,9 @@ const express = require('express')
 const app = express()
 const http = require('http').Server(app)
 const io = require('socket.io')(http)
-const{game} = require('./game.js')
+const {Game} = require('./game.js')
 
-var Game = new Game(9)
+var game = new Game(5)
 
 app.use(express.static('dist'))
 app.get('/', function (req, res) {
@@ -12,5 +12,5 @@ app.get('/', function (req, res) {
 })
 
 io.on('connection', function (socket) {
-  Game.onPlayerJoin(socket)
-}
+  game.onPlayerJoin(socket)
+})
