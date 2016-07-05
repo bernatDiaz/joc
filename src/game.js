@@ -26,7 +26,7 @@ class game {
       for (var j = 0; j < C.BOARD_SIZE; ++j) {
         var p = (i * C.BOARD_SIZE + j) % C.NUMBER_PLAYERS
         this.next = false
-        this.sockets[p].emit('construct', i, j)
+        this.sockets[0].emit('construct', i, j)
         while (!this.next) {}
       }
     }

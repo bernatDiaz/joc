@@ -1,3 +1,5 @@
+/* globals Image, requestAnimationFrame */
+
 const io = require('socket.io-client')
 // const { Game } = require('./game.js')
 const C = require('./constants.js')
@@ -9,35 +11,47 @@ for (var k = 0; k < C.BOARD_SIZE; ++k) {
   Board[k] = new Array(C.BOARD_SIZE)
 }
 
-var tauler = document.getElementById('board')
+var board = document.getElementById('board')
+board.width = window.innerWidth
+board.height = window.innerHeight * 0.8
+board.addEventListener('click', function (e) {
+  console.log(e.pageX, e.pageY)
+  console.log(e)
+})
+var turn = false
+const ctx = board.getContext('2d')
+const edge = board.height / 5
+
 for (var i = 0; i < C.BOARD_SIZE; ++i) {
-  var fila = document.createElement('div')
-  tauler.appendChild(fila)
-  fila.display = 'block'
-  fila.width = '100%'
-  fila.height = '20%'
-  fila.float = 'left'
   for (var j = 0; j < C.BOARD_SIZE; ++j) {
-    Board[i][j] = document.createElement('img')
-    Board[i][j].src = '../images/tree.jpeg'
-    tauler.appendChild(Board[i][j])
-    Board[i][j].display = 'inline'
-    Board[i][j].float = 'left'
-    Board[i][j].width = '20%'
-    Board[i][j].height = '100%'
-    Board[i][j].border = '1px solid #000000'
+    ctx.fillStyle = 'white'
+    ctx.rect(j * edge, i * edge, edge, edge)
+    ctx.fill()
+    ctx.stroke()
   }
 }
-var turn = false
-var buttons = document.getElementById('buttons')
+/*function loop (image, i , j) {
+  requestAnimationFrame(loop)
+  ctx.drawImage(image, edge, edge, edge, edge)
+}
+loop()*/
+const buttons = document.getElementById('buttons')
+buttons.width = window.innerWidth
+buttons.height = window.innerHeight / 5
+
+function createResourceButton (resourceType) {
+  name.src = path
+  buttons.appendChild(name)
+  name.style.display = 'inline'
+  name.style.float = 'left'
+  name.style.width = (window.innerWidth * 0.19) + 'px'
+  name.style.height = (window.innerHeight * 0.2) + 'px'
+  name.style.border = '1px solid #000000'
+}
+
 var treeButton = document.createElement('img')
-treeButton.src = '../images/tree.jpeg'
-buttons.appendChild(treeButton)
-treeButton.display = 'inline'
-treeButton.float = 'left'
-treeButton.width = '20%'
-treeButton.height = '100%'
-treeButton.border = '1px solid #000000'
+propertiesInitialButtons(treeButton, 'images/tree.jpeg')
+
 treeButton.onclick = function () {
   if (turn) {
     socket.emit('answerConstruct', i, j, C.TREE)
@@ -45,18 +59,47 @@ treeButton.onclick = function () {
     turn = false
   }
 }
+
 var meatButton = document.createElement('img')
-meatButton.src = '../images/meat.jpg'
-buttons.appendChild(meatButton)
-meatButton.display = 'inline'
-meatButton.float = 'left'
-meatButton.width = '20%'
-meatButton.height = '100%'
-meatButton.border = '1px solid #000000'
+propertiesInitialButtons(meatButton, 'images/meat.jpg')
+
 meatButton.onclick = function () {
   if (turn) {
     socket.emit('answerConstruct', i, j, C.MEAT)
     buttons.removeChild(meatButton)
+    turn = false
+  }
+}
+
+var rockButton = document.createElement('img')
+propertiesInitialButtons(rockButton, 'images/rock.jpg')
+
+rockButton.onclick = function () {
+  if (turn) {
+    socket.emit('answerConstruct', i, j, C.ROCK)
+    buttons.removeChild(rockButton)
+    turn = false
+  }
+}
+
+var sandButton = document.createElement('img')
+propertiesInitialButtons(sandButton, 'images/sand.jpg')
+
+sandButton.onclick = function () {
+  if (turn) {
+    socket.emit('answerConstruct', i, j, C.SAND)
+    buttons.removeChild(sandButton)
+    turn = false
+  }
+}
+
+var waterButton = document.createElement('img')
+propertiesInitialButtons(waterButton, 'images/water.jpeg')
+
+waterButton.onclick = function () {
+  if (turn) {
+    socket.emit('answerConstruct', i, j, C.WATER)
+    buttons.removeChild(waterButton)
     turn = false
   }
 }
