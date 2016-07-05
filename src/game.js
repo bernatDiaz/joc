@@ -1,3 +1,7 @@
+const express = require('express')
+const app = express()
+const http = require('http').Server(app)
+const io = require('socket.io')(http)
 const C = require('./constants.js')
 class game {
   constructor (size = C.BOARD_SIZE) {
@@ -8,6 +12,16 @@ class game {
     this.nPlayers = 0
     this.next = false
   }
+  constructBoard () {
+    for (var i = 0; i < this.nPlayers; ++i) {
+      for (var j = 0; j < C.BOARD_SIZE; ++j) {
+        var p = (i * C.BOARD_SIZE + j) % C.NUMBER_PLAYERS
+        this.next = false
+        this.sockets[p].emit('initialTurn', i, j)
+        while (!this.next) {}
+      }
+    }
+  }
   onPlayerJoin (socket) {
     if (!this.started) {
       var i = 0
@@ -15,20 +29,12 @@ class game {
       this.sockets[i] = socket
       this.players[socket.id] = i
       this.nPlayers++
-      if (this.nPlayers >= C.NUMBER_PLAYERS) {
+      io.sockets.emit('waitScreen', this.nPlayers)
+      io.sockets.on('start', function () {
         this.started = true
+        io.sockets.emit('gameStarted', this.nPlayers)
         this.constructBoard()
-      }
-    }
-  }
-  constructBoard () {
-    for (var i = 0; i < C.BOARD_SIZE; ++i) {
-      for (var j = 0; j < C.BOARD_SIZE; ++j) {
-        var p = (i * C.BOARD_SIZE + j) % C.NUMBER_PLAYERS
-        this.next = false
-        this.sockets[0].emit('construct', i, j)
-        while (!this.next) {}
-      }
+      })
     }
   }
   answerConstruct (i, j, f) {
