@@ -1,27 +1,36 @@
-const express = require('express')
-const app = express()
-const http = require('http').Server(app)
-const io = require('socket.io')(http)
 const C = require('./constants.js')
-class game {
+
+class Game {
   constructor (size = C.BOARD_SIZE) {
     this.board = []
     this.players = {}
     this.sockets = []
     this.started = false
     this.nPlayers = 0
-    this.next = false
+    this.i = 0
+    this.j = 0
+    this.received = 0
   }
+
   constructBoard () {
-    for (var i = 0; i < this.nPlayers; ++i) {
-      for (var j = 0; j < C.BOARD_SIZE; ++j) {
-        var p = (i * C.BOARD_SIZE + j) % C.NUMBER_PLAYERS
-        this.next = false
-        this.sockets[p].emit('initialTurn', i, j)
-        while (!this.next) {}
-      }
+    var _i = this.i
+    var _j = this.j
+    _j += this.nPlayers
+    if (_j > 5){
+      _j -= 5
+      _i ++
+    }
+    while((this.i != _i) || (this.j != _j)){
+      var p = (this.i * C.BOARD_SIZE + this.j) % this.nPlayers
+      this.sockets[p].emit('initialTurn', {vertical : this.i, horitzontal : this.j})
+      ++this.j
+      if(this.j > 5) this.j -= 5
+      ++this.i
+      console.log(this.i)
+      console.log(this.j)
     }
   }
+
   onPlayerJoin (socket) {
     if (!this.started) {
       var i = 0
@@ -29,20 +38,31 @@ class game {
       this.sockets[i] = socket
       this.players[socket.id] = i
       this.nPlayers++
-      io.sockets.emit('waitScreen', this.nPlayers)
-      io.sockets.on('start', function () {
-        this.started = true
-        io.sockets.emit('gameStarted', this.nPlayers)
-        this.constructBoard()
+      this.sockets.forEach((socket) => {
+        if (socket) socket.emit('waitScreen', this.nPlayers)
       })
     }
   }
-  answerConstruct (i, j, f) {
-    this.next = true
-    this.board[i][j].figure = f
+
+  onGameStart () {
+    console.log('game started game')
+    this.started = true
     this.sockets.forEach((socket) => {
-      if (socket) socket.emit('changeFigure', i, j, f)
+      if (socket) socket.emit('gameStarted', this.nPlayers)
     })
+    this.constructBoard()
+  }
+
+  answerConstruct (data) {
+    this.received++
+    this.board[data.i][data.j].figure = data.dibuix
+    this.sockets.forEach((socket) => {
+      if (socket) socket.emit('changeFigure', data)
+    })
+    if(this.received === this.nPlayers){
+      this.received = 0
+      constructBoard()
+    }
   }
 }
-exports.game = game
+exports.Game = Game

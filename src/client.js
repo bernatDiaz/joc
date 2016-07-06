@@ -7,9 +7,9 @@ const C = require('./constants.js')
 // var game = new Game()
 const socket = io()
 const imatges = ['images/tree.jpeg', 'images/water.jpeg', 'images/sand.jpg', 'images/rock.jpg', 'images/meat.jpg']
-var startButton, text
-var i, j
+var startButton, text, i, j
 var turn = false
+var horitzontal, vertical
 /* var Board = new Array(C.BOARD_SIZE)
 for (var k = 0; k < C.BOARD_SIZE; ++k) {
   Board[k] = new Array(C.BOARD_SIZE)
@@ -28,8 +28,8 @@ function construction (nPlayers) {
   })*/
   var turn = false
   const ctx = board.getContext('2d')
-  const vertical = board.height / nPlayers
-  const horitzontal = board.width / C.BOARD_SIZE
+  vertical = board.height / nPlayers
+  horitzontal = board.width / C.BOARD_SIZE
 
   for (var k = 0; k < nPlayers; ++k) {
     for (var y = 0; y < C.BOARD_SIZE; ++y) {
@@ -39,21 +39,16 @@ function construction (nPlayers) {
       ctx.stroke()
     }
   }
-  /* function loop (image, i , j) {
-    requestAnimationFrame(loop)
-    ctx.drawImage(image, edge, edge, edge, edge)
-  }
-  loop()*/
-  createResourceButton(C.TREE - 1)
-  createResourceButton(C.WATER - 1)
-  createResourceButton(C.SAND - 1)
-  createResourceButton(C.ROCK - 1)
-  createResourceButton(C.MEAT - 1)
+  createResourceButton(C.TREE)
+  createResourceButton(C.WATER)
+  createResourceButton(C.SAND)
+  createResourceButton(C.ROCK)
+  createResourceButton(C.MEAT)
 }
 
 function createResourceButton (resourceType) {
   var initialButton = document.createElement('img')
-  initialButton.src = imatges[resourceType]
+  initialButton.src = imatges[resourceType - 1]
   buttons.appendChild(initialButton)
   initialButton.style.display = 'inline'
   initialButton.style.float = 'left'
@@ -62,7 +57,7 @@ function createResourceButton (resourceType) {
   initialButton.style.border = '1px solid #000000'
   initialButton.onclick = function () {
     if (turn) {
-      socket.emit('answerConstruct', i, j, resourceType)
+      socket.emit('answerConstruct', {i : i, j : j, dibuix : resourceType})
       buttons.removeChild(initialButton)
       turn = false
     }
@@ -70,26 +65,38 @@ function createResourceButton (resourceType) {
 }
 
 socket.on('waitScreen', function (nPlayers) {
-  if (!text){
-    text = document.createElement('div')
+  console.log('got waitScreen event')
+  if (!text) {
+    text = document.createElement('p')
     buttons.appendChild(text)
   }
-  text.value = nPlayers.toString() + ' players'
+  text.innerHTML = nPlayers.toString() + ' players'
   if (!startButton) {
     startButton = document.createElement('button')
     buttons.appendChild(startButton)
-    startButton.value = 'Start'
+    startButton.innerHTML = 'Start'
     startButton.onclick = function () {
+      console.log("game started client")
       socket.emit('start')
     }
   }
 })
-socket.on('initialTurn', (_i, _j) => {
-  i = _i
-  j = _j
+socket.on('initialTurn', (posicions) => {
+  i = posicions.vertical
+  j = posicions.horitzontal
   turn = true
 })
 socket.on('gameStarted', (nPlayers) => {
   buttons.removeChild(startButton)
+  buttons.removeChild(text)
   construction(nPlayers)
 })
+
+socket.on('changeFigure', (data) => {
+  loop(data.dibuix, data.i, data.j)
+})
+function loop (dibuix, i , j) {
+  requestAnimationFrame(loop)
+  image = imatges[dibuix - 1]
+  ctx.drawImage(image, j * horitzontal, i * vertical, horitzontal, vertical)
+}
