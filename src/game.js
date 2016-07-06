@@ -16,18 +16,21 @@ class Game {
     var _i = this.i
     var _j = this.j
     _j += this.nPlayers
-    if (_j > 5){
+    _j--
+    if (_j >= 5){
       _j -= 5
       _i ++
     }
-    while((this.i != _i) || (this.j != _j)){
-      var p = (this.i * C.BOARD_SIZE + this.j) % this.nPlayers
-      this.sockets[p].emit('initialTurn', {vertical : this.i, horitzontal : this.j})
-      ++this.j
-      if(this.j > 5) this.j -= 5
-      ++this.i
+    while((this.i <= _i) && (this.j <= _j)){
       console.log(this.i)
       console.log(this.j)
+      var p = (this.i * C.BOARD_SIZE + this.j) % this.nPlayers
+      this.sockets[p].emit('initialTurn', {i : this.i, j : this.j})
+      ++this.j
+      if(this.j >= 5){
+        this.j -= 5
+        ++this.i
+      }
     }
   }
 
@@ -40,6 +43,7 @@ class Game {
       this.nPlayers++
       this.sockets.forEach((socket) => {
         if (socket) socket.emit('waitScreen', this.nPlayers)
+        console.log(socket.id)
       })
     }
   }
@@ -55,13 +59,19 @@ class Game {
 
   answerConstruct (data) {
     this.received++
+    this.board[data.i] = []
+    this.board[data.i][data.j] = {}
     this.board[data.i][data.j].figure = data.dibuix
     this.sockets.forEach((socket) => {
-      if (socket) socket.emit('changeFigure', data)
+      if (socket) {
+        console.log("emit")
+        socket.emit('changeFigure', data)
+        console.log(socket.id)
+      }
     })
     if(this.received === this.nPlayers){
       this.received = 0
-      constructBoard()
+      this.constructBoard()
     }
   }
 }

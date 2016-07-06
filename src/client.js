@@ -82,10 +82,11 @@ socket.on('waitScreen', function (nPlayers) {
   }
 })
 socket.on('initialTurn', (posicions) => {
-  i = posicions.vertical
-  j = posicions.horitzontal
+  i = posicions.i
+  j = posicions.j
   turn = true
 })
+
 socket.on('gameStarted', (nPlayers) => {
   buttons.removeChild(startButton)
   buttons.removeChild(text)
@@ -93,8 +94,10 @@ socket.on('gameStarted', (nPlayers) => {
 })
 
 socket.on('changeFigure', (data) => {
+  console.log("change figure")
   loop(data.dibuix, data.i, data.j)
 })
+
 function loop (dibuix, i , j) {
   requestAnimationFrame(loop)
   image = imatges[dibuix - 1]

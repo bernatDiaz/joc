@@ -15,10 +15,8 @@ app.get('/', function (req, res) {
 })
 
 io.on('connection', function (socket) {
-  console.log(`${socket.id} joined the server`)
   game.onPlayerJoin(socket)
   socket.on('start', function () {
-    console.log("game started server")
     game.onGameStart()
   })
   socket.on('answerConstruct', function (data) {
