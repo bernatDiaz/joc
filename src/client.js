@@ -22,13 +22,15 @@ const emptyCanvas = document.createElement('canvas')
 const emptyCtx = emptyCanvas.getContext('2d')
 emptyCanvas.width = 1
 emptyCanvas.height = 1
-emptyCtx.fillStyle = 'black'
+emptyCtx.fillStyle = 'white'
 emptyCtx.fillRect(0, 0, 1, 1)
 textures.unshift(new PIXI.Texture(new PIXI.BaseTexture(emptyCanvas)))
 
 var startButton, text, i, j, horitzontal, vertical, board
 var turn = false
 var renderer = new PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight * 0.8)
+document.body.appendChild(renderer.view)
+
 const stage = new PIXI.Container()
 const buttons = document.getElementById('buttons')
 buttons.width = window.innerWidth
@@ -116,10 +118,11 @@ socket.on('gameStarted', (nPlayers) => {
 
 socket.on('changeFigure', (data) => {
   console.log('change figure')
-  loop(data.dibuix, data.i, data.j)
+  //loop(data.dibuix, data.i, data.j)
 })
 
-function loop (dibuix, i, j) {
+function loop () {
   requestAnimationFrame(loop)
-  board[i][j].setTexture(textures[dibuix])
+  renderer.render(stage)
 }
+loop()

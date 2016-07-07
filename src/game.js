@@ -7,30 +7,29 @@ class Game {
     this.sockets = []
     this.started = false
     this.nPlayers = 0
-    this.i = 0
-    this.j = 0
+    this.i = 1
+    this.j = 1
     this.received = 0
+    this.objects = []
   }
 
   constructBoard () {
     var _i = this.i
     var _j = this.j
-    _j += this.nPlayers
-    _j--
-    if (_j >= 5) {
-      _j -= 5
-      _i++
+    _j += this.nPlayers * 2
+    if (_j >= C.BOARD_SIZE * 2 + 1) {
+      _j = 1
+      _i+= 2
     }
+    var target = 0
     while ((this.i <= _i) && (this.j <= _j)) {
-      console.log(this.i)
-      console.log(this.j)
-      var p = (this.i * C.BOARD_SIZE + this.j) % this.nPlayers
-      this.sockets[p].emit('initialTurn', {i: this.i, j: this.j})
-      ++this.j
-      if (this.j >= 5) {
-        this.j -= 5
-        ++this.i
+      this.sockets[target].emit('initialTurn', {i: this.i, j: this.j})
+      this.j+= 2
+      if (this.j >= C.BOARD_SIZE * 2 + 1) {
+        this.j = 1
+        this.i += 2
       }
+      ++target
     }
   }
 
@@ -54,6 +53,10 @@ class Game {
     this.sockets.forEach((socket) => {
       if (socket) socket.emit('gameStarted', this.nPlayers)
     })
+    this.objects = new Array(2 * this.nPlayers + 1)
+    for(z = 0; z < 2 * this.nPlayers + 1; z++){
+     this.objects[z] = new Array(C.BOARD_SIZE)
+    }
     this.constructBoard()
   }
 
