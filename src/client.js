@@ -15,7 +15,8 @@ const imatges = [
   'images/meat.jpg'
 ]
 const textures = imatges.map(function (path) {
-  return new PIXI.Texture(new PIXI.BaseTexture(new Image(path)))
+  //return new PIXI.Texture(new PIXI.BaseTexture(new Image(path)))
+  return PIXI.Texture.fromImage(path)
 })
 
 const emptyCanvas = document.createElement('canvas')
@@ -26,7 +27,7 @@ emptyCtx.fillStyle = 'white'
 emptyCtx.fillRect(0, 0, 1, 1)
 textures.unshift(new PIXI.Texture(new PIXI.BaseTexture(emptyCanvas)))
 
-var startButton, text, i, j, horitzontal, vertical, board
+var startButton, text, i, j, horitzontal, vertical, board, dibujo
 var turn = false
 var renderer = new PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight * 0.8)
 document.body.appendChild(renderer.view)
@@ -41,24 +42,28 @@ function construction (nPlayers) {
     console.log(e.pageX, e.pageY)
     console.log(e)
   })*/
-  board = global.board = new Array(nPlayers)
-  for (var z = 0; z < nPlayers; ++z) {
-    board[z] = new Array(C.BOARD_SIZE)
+  board = global.board = new Array(nPlayers * 2 + 1)
+  for (var z = 0; z < nPlayers * 2 + 1; ++z) {
+    board[z] = new Array(C.BOARD_SIZE * 2 + 1)
   }
-  console.log(board)
+  dibujo = global.dibujo = new Array(nPlayers * 2 + 1)
+  for (z = 0; z < nPlayers * 2 + 1; ++z) {
+    dibujo[z] = new Array(C.BOARD_SIZE * 2 + 1)
+  }
   turn = false
-  vertical = renderer.height / nPlayers
-  horitzontal = renderer.width / C.BOARD_SIZE
+  var offset = 2
+  vertical = renderer.height / (nPlayers * 2 + 1) - (nPlayers + 1) * offset
+  horitzontal = renderer.width / (C.BOARD_SIZE * 2 + 1) - (nPlayers + 1) * offset
   console.log(vertical, horitzontal)
-  for (var k = 0; k < nPlayers; ++k) {
-    for (var y = 0; y < C.BOARD_SIZE; ++y) {
+  for (var k = 0; k < nPlayers * 2 + 1; ++k) {
+    for (var y = 0; y < C.BOARD_SIZE * 2 + 1; ++y) {
       const cellSprite = new PIXI.Sprite(textures[C.EMPTY])
       stage.addChild(cellSprite)
       cellSprite.scale.x = horitzontal
       cellSprite.scale.y = vertical
-      cellSprite.position.x = y * (horitzontal + 2) + 2
-      cellSprite.position.y = k * (vertical + 2) + 2
-      board[k][y] = cellSprite
+      cellSprite.position.x = y * (horitzontal + offset) + offset
+      cellSprite.position.y = k * (vertical + offset) + offset
+      dibujo[k][y] = cellSprite
     }
   }
   debugger
@@ -100,11 +105,12 @@ socket.on('waitScreen', function (nPlayers) {
     startButton.innerHTML = 'Start'
     startButton.onclick = function () {
       console.log('game started client')
-      socket.emit('start')
+      socket.emit('startGame')
     }
   }
 })
 socket.on('initialTurn', (posicions) => {
+  console.log('initialTurn')
   i = posicions.i
   j = posicions.j
   turn = true
@@ -117,7 +123,7 @@ socket.on('gameStarted', (nPlayers) => {
 })
 
 socket.on('changeFigure', (data) => {
-  console.log('change figure')
+  dibujo[data.i][data.j].setTexture(textures[data.dibuix])
   //loop(data.dibuix, data.i, data.j)
 })
 
