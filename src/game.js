@@ -17,17 +17,17 @@ class Game {
     var _j = this.j
     _j += this.nPlayers
     _j--
-    if (_j >= 5){
+    if (_j >= 5) {
       _j -= 5
-      _i ++
+      _i++
     }
-    while((this.i <= _i) && (this.j <= _j)){
+    while ((this.i <= _i) && (this.j <= _j)) {
       console.log(this.i)
       console.log(this.j)
       var p = (this.i * C.BOARD_SIZE + this.j) % this.nPlayers
-      this.sockets[p].emit('initialTurn', {i : this.i, j : this.j})
+      this.sockets[p].emit('initialTurn', {i: this.i, j: this.j})
       ++this.j
-      if(this.j >= 5){
+      if (this.j >= 5) {
         this.j -= 5
         ++this.i
       }
@@ -64,12 +64,12 @@ class Game {
     this.board[data.i][data.j].figure = data.dibuix
     this.sockets.forEach((socket) => {
       if (socket) {
-        console.log("emit")
+        console.log('emit')
         socket.emit('changeFigure', data)
         console.log(socket.id)
       }
     })
-    if(this.received === this.nPlayers){
+    if (this.received === this.nPlayers) {
       this.received = 0
       this.constructBoard()
     }

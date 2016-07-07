@@ -1,44 +1,65 @@
 /* globals Image, requestAnimationFrame */
-
+/* eslint-disable new-cap */
+const PIXI = require('pixi.js')
 const io = require('socket.io-client')
 // const { Game } = require('./game.js')
 const C = require('./constants.js')
 
 // var game = new Game()
 const socket = io()
-const imatges = ['images/tree.jpeg', 'images/water.jpeg', 'images/sand.jpg', 'images/rock.jpg', 'images/meat.jpg']
-var startButton, text, i, j
+const imatges = [
+  'images/tree.jpeg',
+  'images/water.jpeg',
+  'images/sand.jpg',
+  'images/rock.jpg',
+  'images/meat.jpg'
+]
+const textures = imatges.map(function (path) {
+  return new PIXI.Texture(new PIXI.BaseTexture(new Image(path)))
+})
+
+const emptyCanvas = document.createElement('canvas')
+const emptyCtx = emptyCanvas.getContext('2d')
+emptyCanvas.width = 1
+emptyCanvas.height = 1
+emptyCtx.fillStyle = 'black'
+emptyCtx.fillRect(0, 0, 1, 1)
+textures.unshift(new PIXI.Texture(new PIXI.BaseTexture(emptyCanvas)))
+
+var startButton, text, i, j, horitzontal, vertical, board
 var turn = false
-var horitzontal, vertical
-/* var Board = new Array(C.BOARD_SIZE)
-for (var k = 0; k < C.BOARD_SIZE; ++k) {
-  Board[k] = new Array(C.BOARD_SIZE)
-}*/
+var renderer = new PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight * 0.8)
+const stage = new PIXI.Container()
 const buttons = document.getElementById('buttons')
 buttons.width = window.innerWidth
 buttons.height = window.innerHeight / 5
 
 function construction (nPlayers) {
-  var board = document.getElementById('board')
-  board.width = window.innerWidth
-  board.height = window.innerHeight * 0.8
   /* board.addEventListener('click', function (e) {
     console.log(e.pageX, e.pageY)
     console.log(e)
   })*/
-  var turn = false
-  const ctx = board.getContext('2d')
-  vertical = board.height / nPlayers
-  horitzontal = board.width / C.BOARD_SIZE
-
+  board = global.board = new Array(nPlayers)
+  for (var z = 0; z < nPlayers; ++z) {
+    board[z] = new Array(C.BOARD_SIZE)
+  }
+  console.log(board)
+  turn = false
+  vertical = renderer.height / nPlayers
+  horitzontal = renderer.width / C.BOARD_SIZE
+  console.log(vertical, horitzontal)
   for (var k = 0; k < nPlayers; ++k) {
     for (var y = 0; y < C.BOARD_SIZE; ++y) {
-      ctx.fillStyle = 'white'
-      ctx.rect(y * horitzontal, k * vertical, horitzontal, vertical)
-      ctx.fill()
-      ctx.stroke()
+      const cellSprite = new PIXI.Sprite(textures[C.EMPTY])
+      stage.addChild(cellSprite)
+      cellSprite.scale.x = horitzontal
+      cellSprite.scale.y = vertical
+      cellSprite.position.x = y * (horitzontal + 2) + 2
+      cellSprite.position.y = k * (vertical + 2) + 2
+      board[k][y] = cellSprite
     }
   }
+  debugger
   createResourceButton(C.TREE)
   createResourceButton(C.WATER)
   createResourceButton(C.SAND)
@@ -57,7 +78,7 @@ function createResourceButton (resourceType) {
   initialButton.style.border = '1px solid #000000'
   initialButton.onclick = function () {
     if (turn) {
-      socket.emit('answerConstruct', {i : i, j : j, dibuix : resourceType})
+      socket.emit('answerConstruct', {i: i, j: j, dibuix: resourceType})
       buttons.removeChild(initialButton)
       turn = false
     }
@@ -76,7 +97,7 @@ socket.on('waitScreen', function (nPlayers) {
     buttons.appendChild(startButton)
     startButton.innerHTML = 'Start'
     startButton.onclick = function () {
-      console.log("game started client")
+      console.log('game started client')
       socket.emit('start')
     }
   }
@@ -94,12 +115,11 @@ socket.on('gameStarted', (nPlayers) => {
 })
 
 socket.on('changeFigure', (data) => {
-  console.log("change figure")
+  console.log('change figure')
   loop(data.dibuix, data.i, data.j)
 })
 
-function loop (dibuix, i , j) {
+function loop (dibuix, i, j) {
   requestAnimationFrame(loop)
-  image = imatges[dibuix - 1]
-  ctx.drawImage(image, j * horitzontal, i * vertical, horitzontal, vertical)
+  board[i][j].setTexture(textures[dibuix])
 }
