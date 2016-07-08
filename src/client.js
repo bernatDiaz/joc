@@ -123,7 +123,14 @@ socket.on('gameStarted', (nPlayers) => {
 })
 
 socket.on('changeFigure', (data) => {
-  dibujo[data.i][data.j].setTexture(textures[data.dibuix])
+  const texture = textures[data.dibuix]
+  const sprite = dibujo[data.i][data.j]
+
+  sprite.setTexture(texture)
+  sprite.scale = new PIXI.Point(
+    horitzontal / texture.width,
+    vertical / texture.height
+  )
   //loop(data.dibuix, data.i, data.j)
 })
 

@@ -10,6 +10,7 @@ class Game {
     this.i = 1
     this.j = 1
     this.received = 0
+    this.stop = false
   }
 
   constructBoard () {
@@ -17,14 +18,17 @@ class Game {
     var _i = this.i
     var _j = this.j
     _j += this.nPlayers * 2
-    if (_j >= C.BOARD_SIZE * 2 + 1) {
-      _j = 1
-      _i+= 2
+    while (_j >= C.BOARD_SIZE * 2 + 1) {
+      _j -= C.BOARD_SIZE * 2
+      _i += 2
     }
+    console.log('max assignment', _i, _j)
     var target = 0
-    while ((this.i <= _i) && (this.j < _j)) {
-      if(this.sockets[target]) {
-        this.sockets[target].emit('initialTurn', {i: this.i, j: this.j})
+    console.log('sockets length', this.sockets.length)
+    while ((this.i < _i) || (this.i == _i && this.j < _j)) {
+      const socket = this.sockets[target]
+      if (socket != null) {
+        socket.emit('initialTurn', {i: this.i, j: this.j})
         this.j+= 2
         if (this.j >= C.BOARD_SIZE * 2 + 1) {
           this.j = 1
@@ -32,8 +36,8 @@ class Game {
         }
       }
       ++target
-      if(target >= this.nPlayers) target = 0
     }
+    if((this.i >= this.nPlayers * 2) && (this.j >= this.BOARD_SIZE * 2)) this.stop = true
   }
 
   onPlayerJoin (socket) {
@@ -70,7 +74,7 @@ class Game {
         socket.emit('changeFigure', data)
       }
     })
-    if (this.received === this.nPlayers) {
+    if (this.received === this.nPlayers && !this.stop) {
       this.received = 0
       this.constructBoard()
     }
